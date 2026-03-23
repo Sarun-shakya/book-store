@@ -86,12 +86,13 @@ export const login = async (req, res) => {
                 message: "Invalid credentials"
             });
         }
-        generateToken(user._id, res);
+        generateToken(user, res);
 
-        res.status(201).json({
+        res.status(200).json({
             _id: user._id,
             fullName: user.fullName,
             email: user.email,
+            role: user.role,
             profilePic: user.profile?.url,
             message: "User logged in successfully"
         });
@@ -105,7 +106,13 @@ export const login = async (req, res) => {
 
 //logout
 export const logout = (_, res) => {
-    res.cookie("jwt", "", { maxAge: 0 });
+    res.cookie("jwt", "", {
+        maxAge: 0,
+        httpOnly: true,
+        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production"
+    });
+
     res.status(200).json({
         message: "Logged out successfully"
     });
@@ -153,12 +160,21 @@ export const updateProfile = async (req, res) => {
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (email) {
+        if (email && email !== user.email) {
             if (!emailRegex.test(email)) {
-                return res.status(400).json({ message: "Invalid email format" });
-            }else{
-                user.email = email;
+                return res.status(400).json({
+                    message: "Invalid email format"
+                });
             }
+
+            const existingUser = await User.findOne({ email });
+            if (existingUser && existingUser._id.toString() !== userId.toString()) {
+                return res.status(400).json({
+                    message: "Email already in use"
+                });
+            }
+
+            user.email = email;
         }
 
         if (password) {
@@ -187,7 +203,7 @@ export const updateProfile = async (req, res) => {
 
         const updatedUser = await user.save();
 
-        return res.status(201).json({
+        return res.status(200).json({
             _id: updatedUser._id,
             fullName: updatedUser.fullName,
             email: updatedUser.email,
@@ -195,7 +211,7 @@ export const updateProfile = async (req, res) => {
             message: "Profile updated successfully"
         });
     } catch (error) {
-        console.log(error);
+        console.error("Error in updateProfile:", error.message);
         return res.status(500).json({
             message: "Internal server error"
         })
