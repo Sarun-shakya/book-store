@@ -1,36 +1,42 @@
-import {v2 as cloudinary} from "cloudinary"
-import fs from "fs"
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs";
+import dotenv from "dotenv";
 
-cloudinary.config({ 
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-    api_key: process.env.CLOUDINARY_API_KEY, 
-    api_secret: process.env.CLOUDINARY_SECRET_KEY 
+dotenv.config();
+
+if (!process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_SECRET_KEY) {
+    console.error("Cloudinary environment variables are missing!");
+    process.exit(1); 
+}
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_SECRET_KEY
 });
 
 const uploadOnCloudinary = async (localFilePath) => {
-    try{
-        if(!localFilePath){
-            return null;
-        }
-        //upload the file in cloudinary
+    try {
+        if (!localFilePath) return null;
+
         const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
-        })
-        //file has been uploaded successfully
-        console.log("File uploaded on cloudinary", response.url);
-        if (fs.existsSync(localFilePath)) {
-            fs.unlinkSync(localFilePath);
-        }// remove the locally saved 
-        return response;
-    }catch(error){
-        if (fs.existsSync(localFilePath)) {
-            fs.unlinkSync(localFilePath);
-        }// remove the locally saved 
-        // temp file as the upload opertion failed
+            resource_type: "auto" // root folder
+        });
+
+        console.log("File uploaded on Cloudinary:", response.secure_url);
+
+        if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
+
+        return {
+            url: response.secure_url,
+            public_id: response.public_id
+        };
+    } catch (error) {
+        console.error("Cloudinary upload failed:", error);
+        if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
         return null;
     }
-}
-
+};
 
 const deleteOnCloudinary = async (public_id, resource_type="image") => {
     try {
