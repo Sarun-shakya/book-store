@@ -30,6 +30,12 @@ const bookSchema = new mongoose.Schema({
         type: Schema.Types.ObjectId,
         ref: "Category",
         required: true
+    },
+    stock: {
+        type: Number,
+        required: true,
+        default: 0,
+        min: [0, "Stock cannot be negative"]
     }
 }, { timestamps: true });
 
