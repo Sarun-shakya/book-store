@@ -8,8 +8,16 @@ const storage = multer.diskStorage({
         const uniqueName = Date.now() + "-" + file.originalname;
         cb(null, uniqueName);
     }
-})
+});
 
 export const upload = multer({
-    storage : storage
-})
+    storage,
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith("image/")) {
+            cb(null, true);
+        } else {
+            cb(new Error("Only images are allowed"), false);
+        }
+    }
+});
