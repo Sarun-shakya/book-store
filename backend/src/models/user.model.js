@@ -21,8 +21,13 @@ const userSchema = new mongoose.Schema({
         default: "user"
     },
     profile: {
-        type: String
-    }
+        url: {
+            type: String
+        },
+        public_id: {
+            type: String, 
+        }
+    },
 },{timestamps: true})
 
 export const User = mongoose.model("User", userSchema);
