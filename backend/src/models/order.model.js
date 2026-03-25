@@ -64,6 +64,9 @@ const orderSchema = new Schema({
         type: String,
         enum: ["processing", "shipped", "delivered", "cancelled"],
         default: "processing"
+    },
+    paymentRef: {
+        type: String 
     }
 }, { timestamps: true });
 
