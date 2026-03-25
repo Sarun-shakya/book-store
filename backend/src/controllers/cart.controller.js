@@ -4,12 +4,12 @@ import { Book } from '../models/book.model.js';
 // get cart
 export const getCart = async (req, res) => {
     try {
-        const cart = await Cart.findOne({ user: req.user._id}).populate("items.book");
+        const cart = await Cart.findOne({ user: req.user._id }).populate("items.book");
 
-        if(!cart){
+        if (!cart) {
             return res.status(200).json({
                 success: true,
-                data: { items: []},
+                data: { items: [] },
                 message: "Cart is empty"
             });
         }
@@ -48,6 +48,20 @@ export const addToCart = async (req, res) => {
         }
 
         let cart = await Cart.findOne({ user: req.user._id });
+        let currentQtyInCart = 0;
+
+        if (cart) {
+            const item = cart.items.find(item => item.book.toString() === bookId);
+            if (item){
+                currentQtyInCart = item.quantity;
+            } 
+        }
+
+        if (qty + currentQtyInCart > book.stock) {
+            return res.status(400).json({
+                message: `Only ${book.stock - currentQtyInCart} more copies of "${book.title}" can be added to the cart`
+            });
+        }
 
         if (!cart) {
             cart = new Cart({
@@ -104,23 +118,29 @@ export const updateCartItem = async (req, res) => {
         const { bookId, quantity } = req.body;
         const qty = Number(quantity);
 
-        if(!bookId || isNaN(qty) || qty < 1){
+        if (!bookId || isNaN(qty) || qty < 1) {
             return res.status(400).json({
                 message: "Book Id and valid quantity required"
             });
         }
 
         const cart = await Cart.findOne({ user: req.user._id }).populate("items.book");
-        if(!cart){
+        if (!cart) {
             return res.status(404).json({
                 message: "Cart not found"
             });
         }
 
         const itemIndex = cart.items.findIndex(item => item.book._id.toString() === bookId);
-        if(itemIndex === -1){
+        if (itemIndex === -1) {
             return res.status(404).json({
                 message: "Book not in a cart"
+            });
+        }
+
+        if (qty > book.stock) {
+            return res.status(400).json({
+                message: `Only ${book.stock} copies of "${book.title}" are available`
             });
         }
 
@@ -148,14 +168,14 @@ export const removeFromCart = async (req, res) => {
     try {
         const { bookId } = req.body;
 
-        if(!bookId){
+        if (!bookId) {
             return res.status(400).json({
                 message: "Book ID is required"
             });
         }
 
-        const cart = await Cart.findOne({ user: req.user._id});
-        if(!cart){
+        const cart = await Cart.findOne({ user: req.user._id });
+        if (!cart) {
             return res.status(404).json({
                 message: "Cart not found"
             });
