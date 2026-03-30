@@ -1,6 +1,7 @@
 import { Order } from '../models/order.model.js';
 import { Cart } from '../models/cart.model.js';
 import { Book } from '../models/book.model.js';
+import { getEsewaPaymentHash, verifyEsewaPayment } from '../config/esewa.js';
 
 // place order from cart
 export const placeOrder = async (req, res) => {
@@ -70,25 +71,28 @@ export const placeOrder = async (req, res) => {
             });
         }
 
-        if(paymentMethod === "esewa"){
-            const esewaURL = "https://uat.esewa.com.np/epay/main";
+        if (paymentMethod === "esewa") {
+            const transaction_uuid = order._id.toString();
+
+            const { signature, signed_field_names } = getEsewaPaymentHash(totalPrice, transaction_uuid);
 
             const paymentData = {
                 amt: totalPrice,
                 psc: 0,
                 pdc: 0,
                 txAmt: 0,
-                tAmt: 0,
                 tAmt: totalPrice,
-                pid: order._id.toString(),
+                pid: transaction_uuid,
                 scd: process.env.ESEWA_MERCHANT_ID,
-                su: `http://localhost:5000/api/v1/orders/esewa-success`,
-                fu: `http://localhost:5000/api/v1/orders/esewa-failure`
-            }
+                su: `${process.env.BASE_URL}/api/v1/orders/esewa-success?orderId=${transaction_uuid}`,
+                fu: `${process.env.BASE_URL}/api/v1/orders/esewa-failure?orderId=${transaction_uuid}`,
+                signature,
+                signed_field_names
+            };
 
             return res.status(200).json({
                 success: true,
-                payment_url: esewaURL,
+                payment_url: "https://uat.esewa.com.np/epay/main",
                 payment_data: paymentData,
                 orderId: order._id
             });
@@ -150,7 +154,7 @@ export const updateOrderStatus = async (req, res) => {
             });
         }
 
-        order.status = status;
+        order.orderStatus = status;
         await order.save();
 
         res.status(200).json({
@@ -193,31 +197,41 @@ export const deleteOrder = async (req, res) => {
     }
 }
 
+// esewa success
 export const esewaSuccess = async (req, res) => {
     try {
-        const { oid, refId } = req.query; 
+        const { data, orderId } = req.query;
 
-        const order = await Order.findById(oid);
-        if (!order) {
-            return res.status(404).json({
-                message: "Order not found"
-            });
+        if (!data || !orderId) {
+            return res.status(400).json({ message: "Invalid request" });
         }
 
+        // verify eSewa payment
+        const { decodedData } = await verifyEsewaPayment(data);
+
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ message: "Order not found" });
+        }
+
+        if (order.paymentStatus === "paid") {
+            return res.redirect(`${process.env.CLIENT_URL}/success`);
+        }
+
+        // update order
         order.paymentStatus = "paid";
-        order.paymentRef = refId;
+        order.paymentRef = decodedData.transaction_code;
         order.orderStatus = "processing";
+        order.paidAt = new Date();
+        order.paymentData = decodedData;
         await order.save();
 
+        // update stock
         for (const item of order.items) {
-            const book = await Book.findById(item.book);
-            if (book) {
-                book.stock -= item.quantity;
-                if (book.stock < 0) book.stock = 0;
-                await book.save();
-            }
+            await Book.findByIdAndUpdate(item.book, { $inc: { stock: -item.quantity } });
         }
 
+        // clear cart
         const cart = await Cart.findOne({ user: order.user });
         if (cart) {
             cart.items = [];
@@ -225,32 +239,28 @@ export const esewaSuccess = async (req, res) => {
             await cart.save();
         }
 
-        res.redirect("http://localhost:5173/success");
-
+        res.redirect(`${process.env.BASE_URL}/success`);
     } catch (error) {
-        console.error("Error in esewaSuccess:", error.message);
-        res.status(500).json({
-            message: "Payment verification failed"
-        });
+        console.error("eSewa Success Error:", error.message);
+        res.redirect(`${process.env.BASE_URL}/failure`);
     }
-}
+};
 
+// esewa failue
 export const esewaFailure = async (req, res) => {
     try {
-        const { oid } = req.query;
+        const { orderId } = req.query;
+        const order = await Order.findById(orderId);
 
-        const order = await Order.findById(oid);
-        if (order) {
+        if (order && order.paymentStatus !== "paid") {
             order.paymentStatus = "failed";
+            order.orderStatus = "cancelled";
             await order.save();
         }
 
-        res.redirect("http://localhost:5173/failure");
-
+        res.redirect(`${process.env.CLIENT_URL}/failure`);
     } catch (error) {
-        console.error("Error in esewaFailure:", error.message);
-        res.status(500).json({
-            message: "Payment failed"
-        });
+        console.error("eSewa Failure Error:", error.message);
+        res.redirect(`${process.env.CLIENT_URL}/failure`);
     }
-}
+};
