@@ -62,11 +62,19 @@ const orderSchema = new Schema({
     },
     orderStatus: {
         type: String,
-        enum: ["processing", "shipped", "delivered", "cancelled"],
-        default: "processing"
+        enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
+        default: "pending"
     },
     paymentRef: {
-        type: String 
+        type: String,
+        default: null
+    },
+    paidAt: {
+        type: Date
+    }, 
+    paymentData: {
+        type: Object,
+        default: null
     }
 }, { timestamps: true });
 
