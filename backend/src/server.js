@@ -17,7 +17,10 @@ import orderRoutes from './routes/order.route.js';
 const app = express();
 
 //middlewares
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:5173", 
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
