@@ -74,25 +74,30 @@ export const placeOrder = async (req, res) => {
         if (paymentMethod === "esewa") {
             const transaction_uuid = order._id.toString();
 
-            const { signature, signed_field_names } = getEsewaPaymentHash(totalPrice, transaction_uuid);
+            // 🔥 GENERATE SIGNATURE HERE
+            const { signature, signed_field_names } =
+                getEsewaPaymentHash(totalPrice, transaction_uuid);
 
             const paymentData = {
-                amt: totalPrice,
-                psc: 0,
-                pdc: 0,
-                txAmt: 0,
-                tAmt: totalPrice,
-                pid: transaction_uuid,
-                scd: process.env.ESEWA_MERCHANT_ID,
-                su: `${process.env.BASE_URL}/api/v1/orders/esewa-success?orderId=${transaction_uuid}`,
-                fu: `${process.env.BASE_URL}/api/v1/orders/esewa-failure?orderId=${transaction_uuid}`,
+                amount: totalPrice,
+                tax_amount: 0,
+                total_amount: totalPrice,
+                transaction_uuid: transaction_uuid,
+                product_code: process.env.ESEWA_PRODUCT_CODE,
+
+                product_service_charge: 0,
+                product_delivery_charge: 0,
+
+                success_url: `${process.env.BASE_URL}/api/v1/orders/esewa-success`,
+                failure_url: `${process.env.BASE_URL}/api/v1/orders/esewa-failure`,
+
+                signed_field_names,
                 signature,
-                signed_field_names
             };
 
             return res.status(200).json({
                 success: true,
-                payment_url: "https://uat.esewa.com.np/epay/main",
+                payment_url: `${process.env.ESEWA_GATEWAY_URL}/api/epay/main/v2/form`,
                 payment_data: paymentData,
                 orderId: order._id
             });
@@ -200,67 +205,97 @@ export const deleteOrder = async (req, res) => {
 // esewa success
 export const esewaSuccess = async (req, res) => {
     try {
-        const { data, orderId } = req.query;
+        console.log("🔥 eSewa Query:", req.query);
 
-        if (!data || !orderId) {
-            return res.status(400).json({ message: "Invalid request" });
+        const { data } = req.query;
+
+        if (!data) {
+            return res.redirect(`${process.env.CLIENT_URL}/failure`);
         }
 
-        // verify eSewa payment
-        const { decodedData } = await verifyEsewaPayment(data);
+        const result = await verifyEsewaPayment(data);
+
+        if (!result?.decodedData) {
+            return res.redirect(`${process.env.CLIENT_URL}/failure`);
+        }
+
+        const decodedData = result.decodedData;
+
+        const status = decodedData.status?.toUpperCase();
+
+        const orderId = decodedData.transaction_uuid;
+
+        if (!orderId) {
+            return res.redirect(`${process.env.CLIENT_URL}/failure`);
+        }
 
         const order = await Order.findById(orderId);
+
         if (!order) {
-            return res.status(404).json({ message: "Order not found" });
+            return res.redirect(`${process.env.CLIENT_URL}/failure`);
         }
 
         if (order.paymentStatus === "paid") {
-            return res.redirect(`${process.env.CLIENT_URL}/success`);
+            return res.redirect(
+                `${process.env.CLIENT_URL}/success?orderId=${orderId}`
+            );
         }
 
-        // update order
+        if (status !== "COMPLETE") {
+            console.log("❌ Payment not complete");
+            return res.redirect(
+                `${process.env.CLIENT_URL}/failure?orderId=${orderId}`
+            );
+        }
+
         order.paymentStatus = "paid";
         order.paymentRef = decodedData.transaction_code;
         order.orderStatus = "processing";
         order.paidAt = new Date();
         order.paymentData = decodedData;
+
         await order.save();
 
-        // update stock
         for (const item of order.items) {
-            await Book.findByIdAndUpdate(item.book, { $inc: { stock: -item.quantity } });
+            await Book.findByIdAndUpdate(
+                item.book,
+                { $inc: { stock: -item.quantity } },
+                { new: true }
+            );
         }
 
-        // clear cart
-        const cart = await Cart.findOne({ user: order.user });
-        if (cart) {
-            cart.items = [];
-            cart.totalPrice = 0;
-            await cart.save();
-        }
+        await Cart.findOneAndUpdate(
+            { user: order.user },
+            { $set: { items: [], totalPrice: 0 } }
+        );
 
-        res.redirect(`${process.env.BASE_URL}/success`);
+        return res.redirect(
+            `${process.env.CLIENT_URL}/success?orderId=${orderId}`
+        );
+
     } catch (error) {
-        console.error("eSewa Success Error:", error.message);
-        res.redirect(`${process.env.BASE_URL}/failure`);
+        return res.redirect(`${process.env.CLIENT_URL}/failure`);
     }
 };
-
 // esewa failue
 export const esewaFailure = async (req, res) => {
     try {
         const { orderId } = req.query;
-        const order = await Order.findById(orderId);
 
-        if (order && order.paymentStatus !== "paid") {
-            order.paymentStatus = "failed";
-            order.orderStatus = "cancelled";
-            await order.save();
+        if (orderId) {
+            const order = await Order.findById(orderId);
+
+            if (order && order.paymentStatus !== "paid") {
+                order.paymentStatus = "failed";
+                order.orderStatus = "cancelled";
+                await order.save();
+            }
         }
 
-        res.redirect(`${process.env.CLIENT_URL}/failure`);
+        return res.redirect(`${process.env.CLIENT_URL}/failure?orderId=${orderId}`);
+
     } catch (error) {
         console.error("eSewa Failure Error:", error.message);
-        res.redirect(`${process.env.CLIENT_URL}/failure`);
+        return res.redirect(`${process.env.CLIENT_URL}/failure`);
     }
 };
