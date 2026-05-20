@@ -13,6 +13,7 @@ import bookRoutes from './routes/book.route.js';
 import categoryRoutes from './routes/category.route.js';
 import cartRoutes from './routes/cart.route.js';
 import orderRoutes from './routes/order.route.js';
+import analyticsRoutes from './routes/analytics.route.js'
 
 const app = express();
 
@@ -33,7 +34,7 @@ app.use('/api/v1/books', bookRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/cart', cartRoutes);
 app.use('/api/v1/orders', orderRoutes);
-// app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 
 app.get("/", (req, res) => {
   res.send("Bookstore API is running...");
