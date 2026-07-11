@@ -120,33 +120,43 @@ export const updateCartItem = async (req, res) => {
 
         if (!bookId || isNaN(qty) || qty < 1) {
             return res.status(400).json({
-                message: "Book Id and valid quantity required"
+                message: "Valid bookId and quantity required"
             });
         }
 
-        const cart = await Cart.findOne({ user: req.user._id }).populate("items.book");
+        const cart = await Cart.findOne({ user: req.user._id })
+            .populate("items.book");
+
         if (!cart) {
             return res.status(404).json({
                 message: "Cart not found"
             });
         }
 
-        const itemIndex = cart.items.findIndex(item => item.book._id.toString() === bookId);
+        const itemIndex = cart.items.findIndex(
+            item => item.book._id.toString() === bookId
+        );
+
         if (itemIndex === -1) {
             return res.status(404).json({
-                message: "Book not in a cart"
+                message: "Book not in cart"
             });
         }
 
+        const book = cart.items[itemIndex].book;
+
         if (qty > book.stock) {
             return res.status(400).json({
-                message: `Only ${book.stock} copies of "${book.title}" are available`
+                message: `Only ${book.stock} copies of "${book.title}" available`
             });
         }
 
         cart.items[itemIndex].quantity = qty;
 
-        cart.totalPrice = cart.items.reduce((sum, item) => sum + item.book.price * item.quantity, 0);
+        cart.totalPrice = cart.items.reduce(
+            (sum, item) => sum + item.book.price * item.quantity,
+            0
+        );
 
         await cart.save();
 
@@ -155,13 +165,14 @@ export const updateCartItem = async (req, res) => {
             data: cart,
             message: "Cart updated successfully"
         });
+
     } catch (error) {
-        console.log("Error in updateCartIndex: ", error.message);
+        console.log("Error in updateCartItem:", error.message);
         res.status(500).json({
             message: "Internal server error"
         });
     }
-}
+};
 
 // remove item from cart
 export const removeFromCart = async (req, res) => {
@@ -174,7 +185,9 @@ export const removeFromCart = async (req, res) => {
             });
         }
 
-        const cart = await Cart.findOne({ user: req.user._id });
+        const cart = await Cart.findOne({ user: req.user._id })
+            .populate("items.book");
+
         if (!cart) {
             return res.status(404).json({
                 message: "Cart not found"
@@ -183,7 +196,9 @@ export const removeFromCart = async (req, res) => {
 
         const initialLength = cart.items.length;
 
-        cart.items = cart.items.filter(item => item.book.toString() !== bookId);
+        cart.items = cart.items.filter(
+            item => item.book._id.toString() !== bookId
+        );
 
         if (cart.items.length === initialLength) {
             return res.status(404).json({
@@ -191,7 +206,11 @@ export const removeFromCart = async (req, res) => {
             });
         }
 
-        cart.totalPrice = cart.items.reduce((sum, item) => sum + item.book.price * item.quantity, 0);
+        // safe total calculation
+        cart.totalPrice = cart.items.reduce(
+            (sum, item) => sum + item.book.price * item.quantity,
+            0
+        );
 
         await cart.save();
 
@@ -200,10 +219,11 @@ export const removeFromCart = async (req, res) => {
             data: cart,
             message: "Book removed from cart successfully"
         });
+
     } catch (error) {
-        console.log("Error in removeFromCart: ", error.message);
+        console.log("Error in removeFromCart:", error.message);
         res.status(500).json({
             message: "Internal server error"
         });
     }
-}
+};

@@ -74,7 +74,7 @@ export const placeOrder = async (req, res) => {
         if (paymentMethod === "esewa") {
             const transaction_uuid = order._id.toString();
 
-            // 🔥 GENERATE SIGNATURE HERE
+            //  GENERATE SIGNATURE HERE
             const { signature, signed_field_names } =
                 getEsewaPaymentHash(totalPrice, transaction_uuid);
 
@@ -114,7 +114,7 @@ export const placeOrder = async (req, res) => {
 // get oders for users
 export const getMyOrders = async (req, res) => {
     try {
-        const orders = await Order.find({ user: req.user._id }).populate("items.book");
+        const orders = await Order.find({ user: req.user._id }).populate("items.book").sort({createdAt: -1});
         res.status(200).json({
             success: true,
             count: orders.length,
@@ -132,7 +132,7 @@ export const getMyOrders = async (req, res) => {
 // get all orders for admin
 export const getAllOrders = async (req, res) => {
     try {
-        const orders = await Order.find().populate("user").populate("items.book");
+        const orders = await Order.find().populate("user").populate("items.book").sort({ createdAt: -1 });
         res.status(200).json({
             success: true,
             count: orders.length,
@@ -178,7 +178,7 @@ export const updateOrderStatus = async (req, res) => {
 // delete order
 export const deleteOrder = async (req, res) => {
     try {
-        const { orderId } = req.body;
+        const { orderId } = req.params;
 
         const order = await Order.findById(orderId);
 
@@ -205,7 +205,7 @@ export const deleteOrder = async (req, res) => {
 // esewa success
 export const esewaSuccess = async (req, res) => {
     try {
-        console.log("🔥 eSewa Query:", req.query);
+        console.log(" eSewa Query:", req.query);
 
         const { data } = req.query;
 
@@ -242,7 +242,7 @@ export const esewaSuccess = async (req, res) => {
         }
 
         if (status !== "COMPLETE") {
-            console.log("❌ Payment not complete");
+            console.log(" Payment not complete");
             return res.redirect(
                 `${process.env.CLIENT_URL}/failure?orderId=${orderId}`
             );

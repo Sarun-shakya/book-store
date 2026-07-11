@@ -23,7 +23,7 @@ export const signup = async (req, res) => {
 
         const user = await User.findOne({ email });
         if (user) {
-            return res.status(400).json({ message: "Email already exists" });
+            return res.status(400).json({ message: "Email is already registered" });
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -46,10 +46,14 @@ export const signup = async (req, res) => {
         });
 
         return res.status(201).json({
-            _id: newUser._id,
-            fullName: newUser.fullName,
-            email: newUser.email,
-            profile: newUser.profile,
+            success: true,
+            data: {
+                _id: newUser._id,
+                fullName: newUser.fullName,
+                email: newUser.email,
+                role: newUser.role,
+                profile: newUser.profile
+            },
             message: "New user registered successfully"
         });
 
@@ -72,6 +76,14 @@ export const login = async (req, res) => {
             });
         }
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                message: "Invalid email format"
+            });
+        }
+
         const user = await User.findOne({ email });
 
         if (!user) {
@@ -89,12 +101,15 @@ export const login = async (req, res) => {
         generateToken(user, res);
 
         res.status(200).json({
-            _id: user._id,
-            fullName: user.fullName,
-            email: user.email,
-            role: user.role,
-            profilePic: user.profile?.url,
-            message: "User logged in successfully"
+            success: true,
+            data: {
+                _id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                role: user.role,
+                profile: user.profile
+            },
+            message: "Logged in successfully"
         });
     } catch (error) {
         console.error("Error in login controller");
@@ -122,7 +137,7 @@ export const logout = (_, res) => {
 export const profile = async (req, res) => {
     try {
         const userId = req.user._id;
-        const user = await User.findById(userId).select("-password -role");
+        const user = await User.findById(userId).select("-password");
         if (!user) {
             return res.status(400).json({
                 message: "User not logged in"
@@ -204,10 +219,14 @@ export const updateProfile = async (req, res) => {
         const updatedUser = await user.save();
 
         return res.status(200).json({
-            _id: updatedUser._id,
-            fullName: updatedUser.fullName,
-            email: updatedUser.email,
-            profile: updatedUser.profile,
+            success: true,
+            data: {
+                _id: updatedUser._id,
+                fullName: updatedUser.fullName,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                profile: updatedUser.profile
+            },
             message: "Profile updated successfully"
         });
     } catch (error) {

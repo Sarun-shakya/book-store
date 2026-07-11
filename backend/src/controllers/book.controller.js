@@ -194,7 +194,7 @@ export const deleteBook = async (req, res) => {
 // get all books
 export const getAllBooks = async (req, res) => {
     try {
-        const books = await Book.find().populate("category");
+        const books = await Book.find().populate("category").sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,
