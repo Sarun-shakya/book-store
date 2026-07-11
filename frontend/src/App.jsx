@@ -1,12 +1,24 @@
 import React from "react"
+import Card from './components/Card.jsx'
+import Header from "./components/Header.jsx"
+import Home from './pages/Home.jsx'
+import Footer from "./components/Footer.jsx"
+import book from "./assets/images/book1.jpg"
+import palace from "./assets/images/palace.png"
+import power from './assets/images/power.png'
+
 
 function App() {
 
   return (
     <>
-      <h1 className="bg-green-200 text-center py-5">Frontend is running</h1>
+      <Header />
+      <Home />
+      <Footer />
     </>
   )
 }
 
 export default App
+
+
