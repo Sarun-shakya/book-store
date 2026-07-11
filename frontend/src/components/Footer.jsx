@@ -1,5 +1,4 @@
 import React from 'react'
-import logo from '../assets/images/logo.png'
 import { Link } from 'react-router'
 import Logo from "./Logo"
 
