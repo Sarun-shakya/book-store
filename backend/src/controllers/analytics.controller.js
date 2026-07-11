@@ -88,11 +88,13 @@ export const getTopSellingBooks = async (req, res) => {
             },
             {
                 $project: {
-                    _id: 1,
-                    totalSold: 1,
+                    _id: "$book._id",
                     title: "$book.title",
+                    author: "$book.author",
+                    category: "$book.category",
                     price: "$book.price",
-                    image: "$book.image.url"
+                    image: "$book.image.url",
+                    totalSold: 1
                 }
             }
         ]);
@@ -122,5 +124,20 @@ export const getRecentOrders = async (req, res) => {
         return res.status(500).json({
             message: "Internal server error"
         });
+    }
+}
+
+export const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find().select("-profile -password");
+        res.status(201).json({
+            success: true,
+            data: users,
+            message: "users fetched successfully"
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Internal server error"
+        })
     }
 }
