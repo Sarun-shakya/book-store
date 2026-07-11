@@ -8,7 +8,7 @@ import { addBook,
         searchBook
  } from '../controllers/book.controller.js';
 import { protectRoute } from '../middleware/auth.middleware.js';
-import { isAdmin } from '../middleware/admin.middleware.js'
+import { isAdmin } from '../middleware/admin.middleware.js';
 import { upload } from '../middleware/multer.middleware.js';
 
 const router = express.Router();

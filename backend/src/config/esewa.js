@@ -6,8 +6,8 @@ const SECRET_KEY = process.env.ESEWA_SECRET_KEY;
 const GATEWAY_URL = process.env.ESEWA_GATEWAY_URL;
 
 // Generate signature for initiating payment
-export const getEsewaPaymentHash = (amount, transaction_uuid) => {
-    const data = `total_amount=${amount},transaction_uuid=${transaction_uuid},product_code=${PRODUCT_CODE}`;
+export const getEsewaPaymentHash = (total_amount, transaction_uuid) => {
+    const data = `total_amount=${total_amount},transaction_uuid=${transaction_uuid},product_code=${PRODUCT_CODE}`;
 
     const signature = crypto
         .createHmac("sha256", SECRET_KEY)
