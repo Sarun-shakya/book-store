@@ -21,7 +21,8 @@ function Footer() {
                 { name: "About Us", href: "/about" },
                 { name: "Careers", href: "#" },
                 { name: "Blog", href: "#" },
-                { name: "Contact", href: "/contact" }
+                { name: "Contact", href: "/contact" },
+                { name: "Admin", href: "/admin/login" }
             ],
         },
         {

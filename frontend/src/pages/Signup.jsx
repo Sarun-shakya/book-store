@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api/axios";
+import { useAuth } from "../context/authContext";
+import { useEffect } from "react";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -12,6 +13,12 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+
+  const { signup } = useAuth();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleProfileChange = (e) => {
     const file = e.target.files[0];
@@ -38,11 +45,7 @@ export default function Signup() {
       formData.append("password", password);
       if (profile) formData.append("profile", profile);
 
-      const res = await API.post("/users/signup", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      navigate("/login");
+      await signup(formData, navigate);
     } catch (err) {
       setError(err.response?.data?.message || "Signup failed. Please try again.");
     }
@@ -50,7 +53,7 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-8">
-      <div className="bg-white rounded-xl border border-gray-200 p-10 w-full max-w-md">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.1)] p-10 w-full max-w-md">
 
         {/* Header */}
         <div className="text-center mb-8">

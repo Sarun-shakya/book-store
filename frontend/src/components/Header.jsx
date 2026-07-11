@@ -219,7 +219,7 @@ export default function Header() {
                                     to="/about"
                                     onClick={() => setMobileMenuOpen(false)}
                                     className={({ isActive }) =>
-                                        `relative block py-2 pr-4 pl-3 lg:p-0 transition-colors duration-300 ${isActive ? "text-orange-700" : "text-gray-700"
+                                        `relative block py-2 pr-4 pl-3 lg:p-0  transition-colors duration-300 ${isActive ? "text-orange-700" : "text-gray-700"
                                         } hover:text-orange-700`
                                     }
                                 >

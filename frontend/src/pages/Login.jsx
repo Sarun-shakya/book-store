@@ -1,7 +1,7 @@
 import React from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
-import API from '../api/axios'
+import { useAuth } from '../context/authContext';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -9,6 +9,11 @@ export default function Login() {
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
+    const { login } = useAuth();
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -21,16 +26,15 @@ export default function Login() {
         setError("");
 
         try {
-            const res = await API.post("/users/login", { email, password });
-            navigate("/");
+            await login(email, password, navigate);
         } catch (error) {
             setError("Login failed. Please check your credentials.");
         }
     };
 
     return (
-        <div className=" bg-gray-100 flex items-center justify-center p-8">
-            <div className="bg-white rounded-xl border border-gray-200 p-10 w-full max-w-md">
+        <div className=" bg-gray-100 flex  items-center justify-center p-8">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.1)] p-10 w-full max-w-md">
 
                 {/* Header */}
                 <div className="text-center mb-8">

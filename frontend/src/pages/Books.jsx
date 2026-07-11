@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import Card from '../components/Card'
-import API from '../utils/axios'
+import API from '../api/axios'
+
 
 const PRICE_RANGES = [
   { label: 'All Prices', min: null, max: null },
   { label: 'Under Rs. 200', min: 0, max: 200 },
-  { label: 'Rs. 200 – Rs.500', min: 200, max: 500 },
-  { label: 'Rs. 500 – Rs.1000', min: 500, max: 1000 },
+  { label: 'Rs. 200 - Rs.500', min: 200, max: 500 },
+  { label: 'Rs. 500 - Rs.1000', min: 500, max: 1000 },
   { label: 'Over Rs. 1000', min: 1000, max: null },
 ]
 
@@ -16,8 +17,11 @@ export default function Books() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
-  const [selectedPrice, setSelectedPrice] = useState(0) 
+  const [selectedPrice, setSelectedPrice] = useState(0)
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   // Fetch categories 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -99,10 +103,10 @@ export default function Books() {
         </div>
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Left Sidebar — Filters */}
-        <aside className="w-56 shrink-0">
-          <div className="sticky top-6 border border-gray-200 rounded-lg p-4 space-y-6">
+        <aside className="w-full lg:w-56 shrink-0">
+          <div className="border border-gray-200 rounded-lg p-4 space-y-6 lg:sticky lg:top-6">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-sm text-gray-700">Filters</h2>
               {hasActiveFilters && (
@@ -120,15 +124,14 @@ export default function Books() {
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                 Category
               </h3>
-              <ul className="space-y-1">
+              <ul className="space-y-1 max-h-48 overflow-y-auto">
                 <li>
                   <button
                     onClick={() => setSelectedCategory('')}
-                    className={`w-full text-left text-sm px-2 py-1.5 rounded-md transition-colors ${
-                      selectedCategory === ''
+                    className={`w-full text-left text-sm px-2 py-1.5 rounded-md transition-colors ${selectedCategory === ''
                         ? 'bg-blue-50 text-blue-600 font-medium'
                         : 'text-gray-600 hover:bg-gray-100'
-                    }`}
+                      }`}
                   >
                     All Categories
                   </button>
@@ -137,11 +140,10 @@ export default function Books() {
                   <li key={cat._id}>
                     <button
                       onClick={() => setSelectedCategory(cat._id)}
-                      className={`w-full text-left text-sm px-2 py-1.5 rounded-md transition-colors ${
-                        selectedCategory === cat._id
+                      className={`w-full text-left text-sm px-2 py-1.5 rounded-md transition-colors ${selectedCategory === cat._id
                           ? 'bg-blue-50 text-blue-600 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
-                      }`}
+                        }`}
                     >
                       {cat.name}
                     </button>
@@ -155,16 +157,15 @@ export default function Books() {
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                 Price Range
               </h3>
-              <ul className="space-y-1">
+              <ul className="space-y-1 max-h-48 overflow-y-auto">
                 {PRICE_RANGES.map((range, idx) => (
                   <li key={idx}>
                     <button
                       onClick={() => setSelectedPrice(idx)}
-                      className={`w-full text-left text-sm px-2 py-1.5 rounded-md transition-colors ${
-                        selectedPrice === idx
+                      className={`w-full text-left text-sm px-2 py-1.5 rounded-md transition-colors ${selectedPrice === idx
                           ? 'bg-blue-50 text-blue-600 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
-                      }`}
+                        }`}
                     >
                       {range.label}
                     </button>
@@ -187,7 +188,7 @@ export default function Books() {
           {loading ? (
             <p className="text-gray-500">Loading books...</p>
           ) : books.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {books.map((book) => (
                 <Card
                   key={book._id}
@@ -196,7 +197,7 @@ export default function Books() {
                   author={book.author}
                   genre={book.category.name}
                   price={book.price}
-                  originalPrice={book.price + book.price*(10/100)}
+                  originalPrice={book.price + book.price * (10 / 100)}
                   badge="Sale"
                   image={book.image.url}
                   onAddToCart={(book) => console.log(book)}
