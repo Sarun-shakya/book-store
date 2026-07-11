@@ -20,7 +20,8 @@ const app = express();
 
 //middlewares
 app.use(cors({
-    origin: "http://localhost:5173", 
+    // origin: "http://localhost:5173", 
+    origin: "https://book-store-sarun1.vercel.app/",
     credentials: true
 }));
 
