@@ -174,7 +174,7 @@ export default function ManageOrders() {
         <table className="w-full text-[15.2px]">
           <thead>
             <tr className="bg-gray-100 text-left text-[15.2px] font-semibold text-gray-700 uppercase tracking-wider">
-              <th className="px-6 py-3 w-8">SN</th>
+              <th className="px-6 py-3 w-8">ID</th>
               <th className="px-6 py-3">Customer</th>
               <th className="px-6 py-3">Items</th>
               <th className="px-6 py-3">Payment Method</th>
@@ -199,7 +199,7 @@ export default function ManageOrders() {
                 <tr key={order._id} className="hover:bg-indigo-50/40 transition-colors duration-100 group">
 
                   {/* SN */}
-                  <td className="px-6 py-4 text-gray-400 tabular-nums">{idx + 1}</td>
+                  <td className="px-6 py-4 text-gray-400 tabular-nums">#{order._id.slice(-6).toUpperCase()}</td>
 
                   {/* Customer */}
                   <td className="px-6 py-4">

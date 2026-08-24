@@ -59,7 +59,7 @@ export const addToCart = async (req, res) => {
 
         if (qty + currentQtyInCart > book.stock) {
             return res.status(400).json({
-                message: `Only ${book.stock - currentQtyInCart} more copies of "${book.title}" can be added to the cart`
+                message: `Not in stock`
             });
         }
 

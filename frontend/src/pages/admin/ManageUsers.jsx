@@ -115,7 +115,7 @@ function ManageUsers() {
               <th className="px-6 py-3">User</th>
               <th className="px-6 py-3">Email</th>
               <th className="px-6 py-3">Role</th>
-              <th className="px-6 py-3 text-right">Actions</th>
+              {/* <th className="px-6 py-3 text-right">Actions</th> */}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -162,7 +162,7 @@ function ManageUsers() {
                     </span>
                   </td>
 
-                  <td className="px-6 py-4">
+                  {/* <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleDelete(user)}
@@ -175,7 +175,7 @@ function ManageUsers() {
                         Delete
                       </button>
                     </div>
-                  </td>
+                  </td> */}
                 </tr>
               ))
             )}

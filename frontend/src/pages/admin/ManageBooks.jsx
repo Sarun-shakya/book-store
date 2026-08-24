@@ -13,6 +13,7 @@ export default function ManageBooks() {
   const [editLoading, setEditLoading] = useState(false)
   const [editError, setEditError] = useState("")
   const [selectedBook, setSelectedBook] = useState(null)
+  const [editImage, setEditImage] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,28 +66,69 @@ export default function ManageBooks() {
       category: book.category?._id || "",
       description: book.description || "",
     })
+    setEditImage(null);
     setEditError("")
     setShowEditModal(true)
   }
 
   const handleEdit = async () => {
     if (!editForm.title || !editForm.author || !editForm.price) {
-      setEditError("Title, author, and price are required.")
-      return
+      setEditError("Title, author, and price are required.");
+      return;
     }
-    setEditLoading(true)
+
+    setEditLoading(true);
+    setEditError("");
+
     try {
-      const res = await API.put(`/books/${selectedBook._id}`, editForm)
+      const formData = new FormData();
+
+      formData.append("title", editForm.title);
+      formData.append("author", editForm.author);
+      formData.append("description", editForm.description);
+      formData.append("price", editForm.price);
+      formData.append("pages", editForm.pages);
+      formData.append("stock", editForm.stock);
+      formData.append("category", editForm.category);
+
+      // Only send image if a new image was selected
+      if (editImage) {
+        formData.append("image", editImage);
+      }
+
+      console.log("editImage:", editImage);
+      console.log("formData image:", formData.get("image"));
+
+      const res = await API.put(
+        `/books/${selectedBook._id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
       setBooks((prev) =>
-        prev.map((b) => (b._id === selectedBook._id ? res.data.data : b))
-      )
-      setShowEditModal(false)
+        prev.map((b) =>
+          b._id === selectedBook._id
+            ? res.data.data
+            : b
+        )
+      );
+
+      setShowEditModal(false);
+      setEditImage(null);
+
     } catch (err) {
-      setEditError(err?.response?.data?.message || "Failed to update book.")
+      setEditError(
+        err?.response?.data?.message ||
+        "Failed to update book."
+      );
     } finally {
-      setEditLoading(false)
+      setEditLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -388,6 +430,56 @@ export default function ManageBooks() {
                   <input type="number" value={editForm.stock} min="0"
                     onChange={(e) => setEditForm((p) => ({ ...p, stock: e.target.value }))}
                     className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-[15.2px] text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition" />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[15.2px] font-medium text-gray-700 mb-1.5">
+                Book Photo
+              </label>
+
+              <div className="flex items-center gap-4">
+                {/* Current image */}
+                {selectedBook?.image?.url && !editImage && (
+                  <img
+                    src={selectedBook.image.url}
+                    alt={selectedBook.title}
+                    className="w-16 h-20 object-cover rounded-xl border border-gray-200"
+                  />
+                )}
+
+                {/* New image preview */}
+                {editImage && (
+                  <img
+                    src={URL.createObjectURL(editImage)}
+                    alt="New book cover"
+                    className="w-16 h-20 object-cover rounded-xl border border-indigo-200"
+                  />
+                )}
+
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setEditImage(file);
+                      }
+                    }}
+                    className="w-full text-[15.2px] text-gray-500
+          file:mr-3 file:py-2 file:px-4
+          file:rounded-lg file:border-0
+          file:text-[14px] file:font-medium
+          file:bg-indigo-50 file:text-indigo-600
+          hover:file:bg-indigo-100
+          cursor-pointer"
+                  />
+
+                  <p className="text-xs text-gray-400 mt-1">
+                    Select a new image to replace the current book cover.
+                  </p>
                 </div>
               </div>
             </div>

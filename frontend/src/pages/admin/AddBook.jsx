@@ -194,13 +194,13 @@ export default function AddBook() {
                 Price <span className="text-red-400">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">$</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">Rs</span>
                 <input
                   type="number"
                   id="price"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  placeholder="0.00"
+                  placeholder=" 0.00"
                   min="0"
                   step="0.01"
                   className={`${inputClass} pl-7`}

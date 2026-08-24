@@ -70,6 +70,9 @@ export const addBook = async (req, res) => {
 // update book
 export const updateBook = async (req, res) => {
     try {
+
+        console.log("REQ.FILE:", req.file);
+console.log("REQ.BODY:", req.body);
         const { id } = req.params;
         const { title, author, description, price, pages, category, stock } = req.body;
 

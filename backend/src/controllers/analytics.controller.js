@@ -129,7 +129,7 @@ export const getRecentOrders = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find().select("-profile -password");
+        const users = await User.find().select(" -password");
         res.status(201).json({
             success: true,
             data: users,

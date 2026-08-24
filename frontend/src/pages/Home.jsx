@@ -24,6 +24,18 @@ export default function Hero() {
     fetchBestSellingBooks();
   }, []);
 
+  useEffect(() => {
+    const fetchNewArrivals = async () => {
+      try {
+        const res = await API.get('/books/')
+        setNewArrivals(res.data.data.slice(0, 5));
+      } catch (error) {
+        console.error('Error fetching books:', error)
+      }
+    };
+    fetchNewArrivals();
+  }, []);
+
   return (
     <>
       <div className="min-h-screen bg-[#faf7f2] text-[#1a1208] font-sans overflow-hidden relative flex flex-col">
@@ -169,26 +181,53 @@ export default function Hero() {
         </div>
       </section>
 
-      {/* <section>
-        <h1>Best Sellers</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {bestSellingBooks.map((book) => (
-                
-                <Card
-                  key={book._id}
-                  id={book._id}
-                  title={book.title}
-                  author={book.author}
-                  genre={book.category.name}
-                  price={book.price}
-                  originalPrice={book.price + book.price * (10 / 100)}
-                  badge="Sale"
-                  image={book.image.url}
-                  onAddToCart={(book) => console.log(book)}
-                />
-              ))}
-            </div>
-      </section> */}
+      {/* Best Sellers */}
+      <section className="mx-5 sm:mx-10 lg:mx-20 my-10">
+        <h1 className="font-serif text-3xl font-bold text-[#1a1208] mb-6">
+          Best Sellers
+        </h1>
+
+        <div className="grid grid-cols-5 gap-4">
+          {bestSellingBooks.map((book) => (
+            <Card
+              key={book._id}
+              id={book._id}
+              title={book.title}
+              author={book.author}
+              genre={book.category.name}
+              price={book.price}
+              originalPrice={book.price + book.price * (10 / 100)}
+              badge="Sale"
+              image={book.image}
+              onAddToCart={(book) => console.log(book)}
+            />
+          ))}
+        </div>
+      </section>
+
+       {/* New Arrivals */}
+      <section className="mx-5 sm:mx-10 lg:mx-20 my-10">
+        <h1 className="font-serif text-3xl font-bold text-[#1a1208] mb-6">
+          New Arrivals
+        </h1>
+
+        <div className="grid grid-cols-5 gap-4">
+          {newArrivals.map((book) => (
+            <Card
+              key={book._id}
+              id={book._id}
+              title={book.title}
+              author={book.author}
+              genre={book.category.name}
+              price={book.price}
+              originalPrice={book.price + book.price * (10 / 100)}
+              badge="Sale"
+              image={book.image.url}
+              onAddToCart={(book) => console.log(book)}
+            />
+          ))}
+        </div>
+      </section>
     </>
 
 
