@@ -22,7 +22,7 @@ const app = express();
 app.use(cors({
     // origin: "http://localhost:5173", 
     // origin: "https://book-store-sarun1.vercel.app/",
-    origin: "https://book-store-backend-ax2x.onrender.com/api/v1",
+    origin: "https://golden-shelf.netlify.app/",
     credentials: true
 }));
 
